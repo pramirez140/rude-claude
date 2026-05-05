@@ -28,35 +28,26 @@ Verify with:
 say -v '?' | grep '^Aman '
 ```
 
-## Install
+## Install (one-liner)
 
-Clone the repo and run these three steps:
+```bash
+curl -fsSL https://raw.githubusercontent.com/pramirez140/rude-claude/main/install.sh | bash
+```
+
+The installer:
+1. Copies `say-done.sh` to `~/.claude/hooks/` and `chmod +x`
+2. Backs up `~/.claude/settings.json` and merges in the `Stop` hook (idempotent — re-running is safe)
+3. Plays one phrase to confirm it works
+
+After install, restart Claude Code or open `/hooks` once so the watcher reloads the config. The hook is `async: true`, so it never delays your turns.
+
+## Install (clone)
 
 ```bash
 git clone https://github.com/pramirez140/rude-claude.git
 cd rude-claude
-
-# 1. Copy the script into your Claude hooks dir
-mkdir -p ~/.claude/hooks
-cp hooks/say-done.sh ~/.claude/hooks/
-chmod +x ~/.claude/hooks/say-done.sh
-
-# 2. Back up your existing settings, then merge in the Stop hook
-cp ~/.claude/settings.json ~/.claude/settings.json.bak.$(date +%s) 2>/dev/null || echo '{}' > ~/.claude/settings.json
-jq --arg cmd "bash \"$HOME/.claude/hooks/say-done.sh\"" '
-  .hooks //= {} |
-  .hooks.Stop //= [] |
-  if any(.hooks.Stop[]?.hooks[]?; .command == $cmd)
-  then .
-  else .hooks.Stop += [{"hooks":[{"type":"command","command":$cmd,"async":true}]}]
-  end
-' ~/.claude/settings.json > /tmp/settings.json.new && mv /tmp/settings.json.new ~/.claude/settings.json
-
-# 3. Test it
-~/.claude/hooks/say-done.sh
+./install.sh
 ```
-
-After install, restart Claude Code or open `/hooks` once so the watcher reloads the config. The hook is `async: true` so it never delays your turns.
 
 ## Customize
 
